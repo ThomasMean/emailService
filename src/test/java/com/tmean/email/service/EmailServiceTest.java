@@ -1,5 +1,8 @@
 package com.tmean.email.service;
 
+import com.sendgrid.Request;
+import com.sendgrid.Response;
+import com.sendgrid.SendGrid;
 import com.tmean.email.models.ContactInput;
 import org.junit.Before;
 import org.junit.Test;
@@ -11,6 +14,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+
+import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,26 +34,23 @@ public class EmailServiceTest {
     @InjectMocks
     private EmailService emailService;
 
-    @Mock
-    private JavaMailSender javaMailSender;
-
-    @Mock
     private EmailService mockEmailService;
 
     @Before
-    public void setup() {
-        doNothing().when(javaMailSender).send(any(SimpleMailMessage.class));
+    public void setup() throws IOException {
+        mockEmailService = spy(emailService);
+        doReturn(new Response()).when(mockEmailService).send(any(Request.class));
     }
 
     @Test
     public void sendEmailShouldReturnTrue() {
-        assertThat(emailService.sendEmail(generateInput())).isTrue();
+        assertThat(mockEmailService.sendEmail(generateInput())).isTrue();
     }
 
     @Test
-    public void sendEmailShouldReturnFalseIfExceptionThrownInJavaMailSender() {
-        doThrow(new RuntimeException()).when(javaMailSender).send(any(SimpleMailMessage.class));
-        assertThat(emailService.sendEmail(generateInput())).isFalse();
+    public void sendEmailShouldReturnFalseIfExceptionThrownInSendGrid() throws IOException {
+        doThrow(new RuntimeException()).when(mockEmailService).send(any(Request.class));
+        assertThat(mockEmailService.sendEmail(generateInput())).isFalse();
     }
 
     @Test
